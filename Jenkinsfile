@@ -7,9 +7,6 @@ pipeline {
         PROJECT_VERSION = "${env.BUILD_NUMBER}"
         // Khai báo credential ID đã thiết lập trên Jenkins
         DOCKER_CREDENTIAL = 'docker-hub-credentials'
-        SSH_CREDENTIAL = 'ssh-staging-server'
-        DEPLOY_SERVER = 'user@your-server.com' 
-        DEPLOY_DIR = '/opt/stress-test-demo/docker'
     }
 
     stages {
@@ -69,11 +66,14 @@ pipeline {
 
         stage('Deploy to Production') {
             steps {
-                echo "Deploying via SSH..."
-                sshagent([SSH_CREDENTIAL]) {
-                    bat """
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "cd ${DEPLOY_DIR} && export IMAGE_REGISTRY=${DOCKER_REGISTRY} && export IMAGE_TAG=${PROJECT_VERSION} && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d --remove-orphans"
-                    """
+                echo "Deploying Locally..."
+                withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}"]) {
+                    dir('docker') {
+                        bat '''
+                            docker-compose -f docker-compose.prod.yml pull
+                            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+                        '''
+                    }
                 }
             }
         }
