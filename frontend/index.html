@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Trị Hệ Thống Stress Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="mode-direct">
+    <div class="bg-glow glow-top"></div>
+    <div class="bg-glow glow-bottom"></div>
+
+    <div class="container-fluid">
+        <!-- ── HEADER & GLOBAL CONTROLS ── -->
+        <header class="top-nav tri-nav">
+            <div class="brand">
+                <h1>Kiểm Tra Tải <span>Hệ Thống</span></h1>
+                <p>Khảo Sát Tốc Độ & Độ Bền Vững: Đồng Bộ vs Đa Luồng vs Hướng Sự Kiện</p>
+            </div>
+            
+            <!-- UI HEALTH MONITOR (NEW) & VIEW TOGGLE -->
+            <div class="header-right">
+
+                
+                <div class="ui-heartbeat-wrapper glass-panel">
+                    <div class="hb-icon pulse-active">💓</div>
+                    <div class="hb-info">
+                        <span class="hb-label">UI HEALTH</span>
+                        <span id="ui-fps" class="hb-fps">60 FPS</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ── TRI-DASHBOARD (3 COLUMNS) ── -->
+        <div class="tri-dashboard">
+            
+            <!-- COLUMN 1: DIRECT -->
+            <div class="be-column direct-col">
+                <div class="col-header bg-blue" onclick="openControlModal('direct')">
+                    <div class="header-main">
+                        <h3>Đồng Bộ (:8081)</h3>
+                        <div class="header-tags">
+                            <span class="arch-badge">⚡ Blocking I/O</span>
+                <div class="insight-badge">🚩 Bottleneck High</div>
+                        </div>
+                    </div>
+                    <div class="status-indicator">
+                        <span id="ws-dot-direct" class="status-dot"></span>
+                    </div>
+                </div>
+                
+                <div class="mini-stats">
+                    <div class="s-box"><span>Nhận:</span> <strong id="rec-direct" class="text-blue">0</strong></div>
+                    <div class="s-box"><span>Xong:</span> <strong id="pro-direct" class="text-green">0</strong></div>
+                    <div class="s-box"><span>Hàng chờ:</span> <strong id="que-direct" class="text-yellow">0</strong></div>
+                    <div class="s-box"><span>Lỗi:</span> <strong id="err-direct" class="text-red">0</strong></div>
+                    <div class="s-box full-width"><span>Phản hồi (Ping):</span> <strong id="ping-direct">0ms</strong></div>
+                </div>
+
+                <div class="progress-wrap mini-prog">
+                    <div class="progress-bg"><div id="prog-direct" class="progress-fill fill-blue" style="width: 0%"></div></div>
+                </div>
+
+                    <div class="terminal-container glass-panel flex-grow">
+                    <div class="terminal-header">
+                        <div class="mac-dots"><span></span><span></span><span></span></div>
+                        <div class="terminal-title">Log Đồng Bộ</div>
+                        <div class="log-actions">
+                            <select class="log-filter" onchange="filterLogs('direct', this.value)">
+                                <option value="all">Tất cả</option>
+                                <option value="success">Thành công</option>
+                                <option value="error">Lỗi</option>
+                            </select>
+                            <button class="btn-icon" onclick="clearAll('direct')">🗑️</button>
+                        </div>
+                    </div>
+                    <div id="log-direct" class="terminal-body small-term"></div>
+                    <div class="terminal-footer">
+                        <label class="auto-scroll-chk"><input type="checkbox" id="scroll-direct" checked> Tự cuộn</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 2: ASYNC -->
+            <div class="be-column async-col">
+                <div class="col-header bg-yellow" onclick="openControlModal('async')">
+                    <div class="header-main">
+                        <h3>Bất Đồng Bộ (:8083)</h3>
+                        <div class="header-tags">
+                            <span class="arch-badge">🧵 Non-blocking</span>
+                <div class="insight-badge">⚠️ Data Loss Risk</div>
+                        </div>
+                    </div>
+                    <div class="status-indicator">
+                        <span id="ws-dot-async" class="status-dot"></span>
+                    </div>
+                </div>
+                
+                <div class="mini-stats">
+                    <div class="s-box"><span>Nhận:</span> <strong id="rec-async" class="text-blue">0</strong></div>
+                    <div class="s-box"><span>Xong:</span> <strong id="pro-async" class="text-green">0</strong></div>
+                    <div class="s-box"><span>Hàng chờ:</span> <strong id="que-async" class="text-yellow">0</strong></div>
+                    <div class="s-box"><span>Lỗi:</span> <strong id="err-async" class="text-red">0</strong></div>
+                    <div class="s-box full-width"><span>Phản hồi (Ping):</span> <strong id="ping-async">0ms</strong></div>
+                </div>
+
+                <div class="progress-wrap mini-prog">
+                    <div class="progress-bg"><div id="prog-async" class="progress-fill fill-yellow" style="width: 0%"></div></div>
+                </div>
+
+                    <div class="terminal-container glass-panel flex-grow">
+                    <div class="terminal-header">
+                        <div class="mac-dots"><span></span><span></span><span></span></div>
+                        <div class="terminal-title">Log Bất Đồng Bộ</div>
+                        <div class="log-actions">
+                            <select class="log-filter" onchange="filterLogs('async', this.value)">
+                                <option value="all">Tất cả</option>
+                                <option value="success">Thành công</option>
+                                <option value="error">Lỗi</option>
+                            </select>
+                            <button class="btn-icon" onclick="clearAll('async')">🗑️</button>
+                        </div>
+                    </div>
+                    <div id="log-async" class="terminal-body small-term"></div>
+                    <div class="terminal-footer">
+                        <label class="auto-scroll-chk"><input type="checkbox" id="scroll-async" checked> Tự cuộn</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 3: KAFKA -->
+            <div class="be-column kafka-col">
+                <div class="col-header bg-green" onclick="openControlModal('kafka')">
+                    <div class="header-main">
+                        <h3>Sự Kiện Kafka (:8082)</h3>
+                        <div class="header-tags">
+                            <span class="arch-badge">🚀 Event-Driven</span>
+                <div class="insight-badge">✅ Highly Resilient</div>
+                        </div>
+                    </div>
+                    <div class="status-indicator">
+                        <span id="ws-dot-kafka" class="status-dot"></span>
+                    </div>
+                </div>
+                
+                <div class="mini-stats">
+                    <div class="s-box"><span>Nhận:</span> <strong id="rec-kafka" class="text-blue">0</strong></div>
+                    <div class="s-box"><span>Xong:</span> <strong id="pro-kafka" class="text-green">0</strong></div>
+                    <div class="s-box"><span>Hàng chờ:</span> <strong id="que-kafka" class="text-green">0</strong></div>
+                    <div class="s-box"><span>Lỗi:</span> <strong id="err-kafka" class="text-red">0</strong></div>
+                    
+                    <div class="s-box lag-row full-width">
+                        <span class="lag-title">💨 Consumer Lag:</span>
+                        <strong id="lag-count" class="text-green">0</strong>
+                    </div>
+                    <div class="progress-wrap mini-prog full-width mb-5">
+                       <div class="progress-bg h-6"><div id="prog-lag" class="progress-fill fill-red" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="s-box full-width"><span>Phản hồi (Ping):</span> <strong id="ping-kafka">0ms</strong></div>
+                </div>
+
+                <div class="partition-grid glass-panel mt-5 p-10">
+                    <span>🧩 Partitions: <b>50</b></span>
+                    <span>📦 Storage: <b>Persistent</b></span>
+                </div>
+
+                <div class="progress-wrap mini-prog adv-only">
+                    <div class="progress-bg"><div id="prog-kafka" class="progress-fill fill-green" style="width: 0%"></div></div>
+                </div>
+
+                <div class="terminal-container glass-panel flex-grow adv-only">
+                    <div class="terminal-header">
+                        <div class="mac-dots"><span></span><span></span><span></span></div>
+                        <div class="terminal-title">Log Kafka Broker</div>
+                        <div class="log-actions">
+                            <select class="log-filter" onchange="filterLogs('kafka', this.value)">
+                                <option value="all">Tất cả</option>
+                                <option value="success">Thành công</option>
+                                <option value="error">Lỗi</option>
+                            </select>
+                            <button class="btn-icon" onclick="clearAll('kafka')">🗑️</button>
+                        </div>
+                    </div>
+                    <div id="log-kafka" class="terminal-body small-term"></div>
+                    <div class="terminal-footer">
+                        <label class="auto-scroll-chk"><input type="checkbox" id="scroll-kafka" checked> Tự cuộn</label>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ── MODAL CONTROL CENTER ── -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeControlModal(event)">
+        <div class="modal-content glass-panel" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modal-title">🎮 Điều Khiển Server</h2>
+                <button class="close-btn" onclick="closeControlModal(event)">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- PHẦN CHUNG: ĐĂNG KÝ 1 USER -->
+                <div class="control-box">
+                    <label>👤 Đăng ký 1 User đơn lẻ (Step 1)</label>
+                    <div class="flex-row">
+                        <input type="text" id="modal-username" class="modern-input" value="user_demo">
+                        <button id="btn-modal-single" class="btn btn-primary">🚀 Gửi Request</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- SCENARIOS CHO DIRECT & ASYNC -->
+                <div id="modal-scenario-box">
+                    <div class="control-box">
+                        <label id="scenario-label">🔥 Kịch bản Stress Test (Step 2)</label>
+                        <div id="scenario-desc" class="small-text mb-10"></div>
+                        <div class="flex-row">
+                            <input type="number" id="modal-spam-count" class="modern-input" value="100">
+                            <button id="btn-modal-scenario" class="btn btn-warning w-100">🔥 KÍCH HOẠT TEST</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Nút Tạm dừng chỉ dành cho Async (cho Scenario 2.2) hoặc khi cần -->
+                    <div id="modal-be-actions" class="mt-20">
+                        <button id="btn-be-pause" class="btn btn-sm btn-outline-warning w-100" onclick="togglePause()">⏸️ Tạm Dừng Server (RAM Queue)</button>
+                    </div>
+                </div>
+
+                <!-- KAFKA SPECIFIC ADVANCED (Scenario 3) -->
+                <div id="modal-kafka-extras" style="display: none;">
+                    <div class="control-box">
+                        <label>🚀 Đẩy tải vào Kafka Broker (Buffered)</label>
+                        <div class="flex-row">
+                            <input type="number" id="modal-kafka-spam-count" class="modern-input" value="500">
+                            <button id="btn-modal-kafka-spam" class="btn btn-warning">💣 Spam 500 Req</button>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+                    
+                    <div class="scale-box mb-15">
+                        <label class="flex-between">
+                            <span>⚙️ Cấu hình Worker (Scaling):</span>
+                            <span id="modal-worker-count" class="text-yellow font-bold">1</span>
+                        </label>
+                        <input type="range" id="modal-kafka-workers" min="1" max="50" value="1" 
+                               oninput="document.getElementById('modal-worker-count').innerText = this.value"
+                               onchange="scaleKafkaWorkers(this.value)">
+                    </div>
+
+                    <div class="grid-actions-2">
+                        <button id="btn-kafka-pause" class="btn btn-sm btn-outline-warning" onclick="togglePause()">⏸️ Tạm Dừng Kafka</button>
+                        <button class="btn btn-sm btn-outline-success" onclick="testKafkaReplay()">⏪ Replay (Time Machine)</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearKafkaQueue()">🗑️ Xóa Sạch Queue</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="testKafkaError()">💀 Giả Lập Lỗi (DLT)</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer" style="padding-top: 20px; text-align: right;">
+                <button class="btn btn-icon-text" onclick="closeControlModal(event)" style="background: rgba(255,255,255,0.05); color: #fff;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts modularized -->
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/stress.js"></script>
+    <script src="js/kafka-scenarios.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
