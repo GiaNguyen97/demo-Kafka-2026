@@ -3,7 +3,7 @@ function initWebSocket(beKey) {
   if (state[beKey].socket) state[beKey].socket.close();
 
   try {
-    state[beKey].socket = new WebSocket(`ws://localhost:${port}/ws`);
+    state[beKey].socket = new WebSocket(`ws://:${port}/ws`);
 
     state[beKey].socket.onopen = () => {
       state[beKey].wsConnected = true;

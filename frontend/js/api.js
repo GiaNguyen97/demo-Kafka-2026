@@ -7,7 +7,7 @@ async function registerSingle(beKey, username, silent = false) {
 
   const start = Date.now();
   try {
-    await fetch(`http://localhost:${port}/users/register?username=${encodeURIComponent(username)}`, {
+    await fetch(`http://:${port}/users/register?username=${encodeURIComponent(username)}`, {
       method: 'POST',
     });
     const rt = Date.now() - start;
