@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         // Thay đổi Username dockerhub của bạn ở đây
-        DOCKER_REGISTRY = 'hieupv'
+        DOCKER_REGISTRY = 'gianguyen97'
         PROJECT_VERSION = "${env.BUILD_NUMBER}"
         // Khai báo credential ID đã thiết lập trên Jenkins
         DOCKER_CREDENTIAL = 'docker-hub-credentials'
@@ -24,17 +24,17 @@ pipeline {
             steps {
                 echo "Building Async Service..."
                 dir('backend/async-service') {
-                    sh 'chmod +x gradlew && ./gradlew clean build -x test'
+                    bat 'gradlew.bat clean build -x test'
                 }
                 
                 echo "Building Direct Service..."
                 dir('backend/direct-service') {
-                    sh 'chmod +x gradlew && ./gradlew clean build -x test'
+                    bat 'gradlew.bat clean build -x test'
                 }
                 
                 echo "Building Kafka Service..."
                 dir('backend/kafka-service') {
-                    sh 'chmod +x gradlew && ./gradlew clean build -x test'
+                    bat 'gradlew.bat clean build -x test'
                 }
             }
         }
@@ -71,14 +71,8 @@ pipeline {
             steps {
                 echo "Deploying via SSH..."
                 sshagent([SSH_CREDENTIAL]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} '
-                            cd ${DEPLOY_DIR} &&
-                            export IMAGE_REGISTRY=${DOCKER_REGISTRY} &&
-                            export IMAGE_TAG=${PROJECT_VERSION} &&
-                            docker-compose -f docker-compose.prod.yml pull &&
-                            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
-                        '
+                    bat """
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} "cd ${DEPLOY_DIR} && export IMAGE_REGISTRY=${DOCKER_REGISTRY} && export IMAGE_TAG=${PROJECT_VERSION} && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d --remove-orphans"
                     """
                 }
             }
