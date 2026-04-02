@@ -11,7 +11,7 @@ async function testKafkaReplay() {
   addLog(kafkaKey, '--- ⏪ TRIGGER: Kích Hoạt Nút Phát Lại Dữ Liệu Hàng Loạt (Replay Time Machine) ---', 'start');
   closeControlModal();
   try {
-    await fetch(`http://:8082/users/replay`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8082/users/replay`, { method: 'POST' });
   } catch (e) {
     addLog(kafkaKey, 'Exception API Tua Lại (Replay): ' + e.message, 'error');
   }
@@ -20,7 +20,7 @@ async function testKafkaReplay() {
 async function scaleKafkaWorkers(workers) {
   addLog(kafkaKey, `--- 🔧 TRIGGER BOOSTER: Bơm thêm Công nhân xử lý lên [ ${workers} ] ---`, 'start');
   try {
-    await fetch(`http://:8082/users/scale?workers=${workers}`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8082/users/scale?workers=${workers}`, { method: 'POST' });
   } catch (e) {
     addLog(kafkaKey, 'Lỗi Scale: ' + e.message, 'error');
   }
@@ -33,7 +33,7 @@ async function clearKafkaQueue() {
   closeControlModal();
 
   try {
-    await fetch(`http://:8082/users/clear`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8082/users/clear`, { method: 'POST' });
   } catch (e) {
     addLog(kafkaKey, 'Lỗi Xóa Queue: ' + e.message, 'error');
   }

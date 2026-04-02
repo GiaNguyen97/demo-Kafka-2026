@@ -30,24 +30,24 @@ async function startAutoDemo() {
     
     addLog('async', "⚠️ GIẢ LẬP RỦI RO: Tạm dừng Worker Async...", 'error');
     // Call API pause async
-    await fetch(`http://:8083/users/pause`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8083/users/pause`, { method: 'POST' });
     runSpamSingle('async', 50, 'DATA_AT_RISK');
     await sleep(4000);
     addLog('async', "🛑 Hàng chờ RAM đang tăng. Nếu server crash lúc này, dữ liệu sẽ MẤT!", 'error');
     await sleep(3000);
-    await fetch(`http://:8083/users/resume`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8083/users/resume`, { method: 'POST' });
 
     // 3. Demo Kafka - Sự bền vững
     switchViewMode('advanced');
     addLog('kafka', "👉 BƯỚC 3: KAFKA - Sức mạnh của sự bền vững (Durable)", 'start');
     addLog('kafka', "⏸️ Tạm dừng Kafka Consumer và đẩy 200 requests...", 'warning');
-    await fetch(`http://:8082/users/pause`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8082/users/pause`, { method: 'POST' });
     runSpamSingle('kafka', 200, 'KAFKA_BUFFER');
     await sleep(5000);
     
     addLog('kafka', "🚀 Kích hoạt 10 Workers để xử lý thần tốc!", 'success');
     await scaleKafkaWorkers(10);
-    await fetch(`http://:8082/users/resume`, { method: 'POST' });
+    await fetch(`http://${window.location.hostname}:8082/users/resume`, { method: 'POST' });
     
     await sleep(5000);
     addLog('kafka', "✅ Kafka đã xử lý xong toàn bộ hàng chờ an toàn!", 'success');

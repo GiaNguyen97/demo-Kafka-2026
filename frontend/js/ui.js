@@ -232,7 +232,7 @@ async function togglePause() {
   addLog(beKey, `--- 🚥 TRẠNG THÁI: ${isPaused ? 'TẠM DỪNG' : 'TIẾP TỤC'} ---`, isPaused ? 'error' : 'success');
   
   try {
-    const baseUrl = `http://:${backend.port}/users/${endpoint}`;
+    const baseUrl = `http://${window.location.hostname}:${backend.port}/users/${endpoint}`;
     await fetch(baseUrl, { method: 'POST' });
   } catch (e) {
     addLog(beKey, 'Lỗi Kết nối: ' + e.message, 'error');
@@ -243,7 +243,7 @@ async function togglePause() {
 function startLagPolling() {
   setInterval(async () => {
     try {
-      const resp = await fetch(`http://:8082/users/lag?groupId=email-group`);
+      const resp = await fetch(`http://${window.location.hostname}:8082/users/lag?groupId=email-group`);
       if (resp.ok) {
         const lag = await resp.json();
         state.kafka.stats.kafkaLag = lag;
