@@ -122,13 +122,13 @@ pipeline {
             steps {
                 script {
                     if (params.TARGET_ENV == 'dev') {
-                        env.CONFIG_FILE = 'docker-compose.dev.yml'
+                        env.OVERRIDE_FILE = 'docker-compose.override.dev.yml'
                     } else if (params.TARGET_ENV == 'staging') {
-                        env.CONFIG_FILE = 'docker-compose.staging.yml'
+                        env.OVERRIDE_FILE = 'docker-compose.override.staging.yml'
                     } else {
-                        env.CONFIG_FILE = 'docker-compose.production.yml'
+                        env.OVERRIDE_FILE = 'docker-compose.override.production.yml'
                     }
-                    echo "Selected config file: ${env.CONFIG_FILE}"
+                    echo "Selected config file: docker-compose.yml + ${env.OVERRIDE_FILE}"
                 }
             }
         }
@@ -136,7 +136,7 @@ pipeline {
         stage('Confirm Production') {
             when { expression { params.TARGET_ENV == 'production' } }
             steps {
-                input message: 'Deploy to PRODUCTION? You are about to deploy to the live environment.', ok: 'Yes, deploy'
+                input message: 'Deploy to PRODUCTION? You are about to deploy to the live environment.', submitter: 'admin,devops', ok: 'Yes, deploy'
             }
         }
 
@@ -146,11 +146,27 @@ pipeline {
                 
                 withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}", "APP_ENV=${params.TARGET_ENV}"]) {
                     dir('docker') {
-                        sh """
-                            docker-compose -p stress_test_${params.TARGET_ENV} -f \${CONFIG_FILE} pull
-                            echo "Applying rolling update pattern using --wait parameter..."
-                            docker-compose -p stress_test_${params.TARGET_ENV} -f \${CONFIG_FILE} up -d --wait --remove-orphans
-                        """
+                        script {
+                            try {
+                                sh """
+                                    docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} pull
+                                    echo "Applying rolling update pattern using --wait parameter..."
+                                    docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
+                                """
+                                // Lưu vết phiên bản thành công
+                                sh "echo ${PROJECT_VERSION} > .env.last_stable_${params.TARGET_ENV}"
+                            } catch (Exception e) {
+                                echo "DEPLOY FAILED! Kích hoạt Auto-Rollback cứu hộ môi trường..."
+                                def lastStable = sh(script: "cat .env.last_stable_${params.TARGET_ENV} || echo 'latest'", returnStdout: true).trim()
+                                withEnv(["IMAGE_TAG=${lastStable}"]) {
+                                    sh """
+                                        echo "Lùi về version an toàn gần nhất: IMAGE_TAG=\${IMAGE_TAG}"
+                                        docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
+                                    """
+                                }
+                                error("Deployment thất bại! Hệ thống đã an toàn quay về version: ${lastStable}")
+                            }
+                        }
                     }
                 }
             }
