@@ -14,7 +14,7 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock # Chìa khóa vàng DooD
-    restart: on-failure
+    restart: always
 
 volumes:
   jenkins_home:

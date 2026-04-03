@@ -9,7 +9,6 @@ pipeline {
 
     parameters {
         string(name: 'DEPLOY_VERSION', defaultValue: 'latest', description: 'Để trống hoặc "latest" để build. Nhập số BUILD_NUMBER (vd: 12) để Rollback.')
-        choice(name: 'TARGET_ENV', choices: ['dev', 'staging', 'production'], description: 'Môi trường hệ thống muốn Deploy tới')
     }
     
     environment {
@@ -24,6 +23,23 @@ pipeline {
             steps {
                 echo "=== PULLING LATEST SOURCE CODE ==="
                 checkout scm
+            }
+        }
+
+        stage('Determine Environment') {
+            steps {
+                script {
+                    def branchName = env.GIT_BRANCH ?: env.BRANCH_NAME ?: 'main'
+                    echo "Webhook/SCM Trigger detected on branch: ${branchName}."
+                    if (branchName.endsWith('main') || branchName.endsWith('master')) {
+                        env.TARGET_ENV = 'production'
+                    } else if (branchName.endsWith('staging')) {
+                        env.TARGET_ENV = 'staging'
+                    } else {
+                        env.TARGET_ENV = 'dev'
+                    }
+                    echo "Mapped Environment TARGET_ENV='${env.TARGET_ENV}'"
+                }
             }
         }
 
@@ -60,7 +76,7 @@ pipeline {
         }
 
         stage('Static Code Analysis (SonarQube)') {
-            when { expression { params.TARGET_ENV == 'production' && params.DEPLOY_VERSION == 'latest' } }
+            when { expression { env.TARGET_ENV == 'production' && params.DEPLOY_VERSION == 'latest' } }
             steps {
                 echo "=== RUNNING SONARQUBE ANALYSIS ==="
                 // sh './gradlew sonar'
@@ -121,9 +137,9 @@ pipeline {
         stage('Set Target Configuration') {
             steps {
                 script {
-                    if (params.TARGET_ENV == 'dev') {
+                    if (env.TARGET_ENV == 'dev') {
                         env.OVERRIDE_FILE = 'docker-compose.override.dev.yml'
-                    } else if (params.TARGET_ENV == 'staging') {
+                    } else if (env.TARGET_ENV == 'staging') {
                         env.OVERRIDE_FILE = 'docker-compose.override.staging.yml'
                     } else {
                         env.OVERRIDE_FILE = 'docker-compose.override.production.yml'
@@ -134,7 +150,7 @@ pipeline {
         }
 
         stage('Confirm Production') {
-            when { expression { params.TARGET_ENV == 'production' } }
+            when { expression { env.TARGET_ENV == 'production' } }
             steps {
                 input message: 'Deploy to PRODUCTION? You are about to deploy to the live environment.', submitter: 'admin,devops', ok: 'Yes, deploy'
             }
@@ -142,26 +158,26 @@ pipeline {
 
         stage('Deploy To Target Environment') {
             steps {
-                echo "=== ORCHESTRATING DEPLOYMENT TO [${params.TARGET_ENV}] ==="
+                echo "=== ORCHESTRATING DEPLOYMENT TO [${env.TARGET_ENV}] ==="
                 
-                withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}", "APP_ENV=${params.TARGET_ENV}"]) {
+                withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}", "APP_ENV=${env.TARGET_ENV}"]) {
                     dir('docker') {
                         script {
                             try {
                                 sh """
-                                    docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} pull
+                                    docker-compose -p stress_test_${env.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} pull
                                     echo "Applying rolling update pattern using --wait parameter..."
-                                    docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
+                                    docker-compose -p stress_test_${env.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
                                 """
                                 // Lưu vết phiên bản thành công
-                                sh "echo ${PROJECT_VERSION} > .env.last_stable_${params.TARGET_ENV}"
+                                sh "echo ${PROJECT_VERSION} > .env.last_stable_${env.TARGET_ENV}"
                             } catch (Exception e) {
                                 echo "DEPLOY FAILED! Kích hoạt Auto-Rollback cứu hộ môi trường..."
-                                def lastStable = sh(script: "cat .env.last_stable_${params.TARGET_ENV} || echo 'latest'", returnStdout: true).trim()
+                                def lastStable = sh(script: "cat .env.last_stable_${env.TARGET_ENV} || echo 'latest'", returnStdout: true).trim()
                                 withEnv(["IMAGE_TAG=${lastStable}"]) {
                                     sh """
                                         echo "Lùi về version an toàn gần nhất: IMAGE_TAG=\${IMAGE_TAG}"
-                                        docker-compose -p stress_test_${params.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
+                                        docker-compose -p stress_test_${env.TARGET_ENV} -f docker-compose.yml -f \${OVERRIDE_FILE} up -d --wait --remove-orphans
                                     """
                                 }
                                 error("Deployment thất bại! Hệ thống đã an toàn quay về version: ${lastStable}")
@@ -186,3 +202,4 @@ pipeline {
         }
     }
 }
+
