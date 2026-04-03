@@ -9,13 +9,11 @@ services:
     privileged: true
     user: root # Setup root override để tránh phân quyền socket phức tạp ở local Docker Desktop
     ports:
-      - "9090:8080" # Giao diện Web Jenkins
+      - "9095:8080" # Giao diện Web Jenkins (Đổi sang 9095 để tránh đụng Jenkins service)
       - "50000:50000" # JNLP port cho Agent nội bộ
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock # Chìa khóa vàng DooD
-      # Tương thích Unix + WSL Windows để Jenkins lấy được executable docker compose host
-      - /usr/bin/docker:/usr/bin/docker
     restart: on-failure
 
 volumes:

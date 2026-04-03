@@ -118,17 +118,39 @@ pipeline {
             }
         }
 
+        stage('Set Target Configuration') {
+            steps {
+                script {
+                    if (params.TARGET_ENV == 'dev') {
+                        env.CONFIG_FILE = 'docker-compose.dev.yml'
+                    } else if (params.TARGET_ENV == 'staging') {
+                        env.CONFIG_FILE = 'docker-compose.staging.yml'
+                    } else {
+                        env.CONFIG_FILE = 'docker-compose.production.yml'
+                    }
+                    echo "Selected config file: ${env.CONFIG_FILE}"
+                }
+            }
+        }
+
+        stage('Confirm Production') {
+            when { expression { params.TARGET_ENV == 'production' } }
+            steps {
+                input message: 'Deploy to PRODUCTION? You are about to deploy to the live environment.', ok: 'Yes, deploy'
+            }
+        }
+
         stage('Deploy To Target Environment') {
             steps {
                 echo "=== ORCHESTRATING DEPLOYMENT TO [${params.TARGET_ENV}] ==="
                 
                 withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}", "APP_ENV=${params.TARGET_ENV}"]) {
                     dir('docker') {
-                        sh '''
-                            docker-compose -f docker-compose.prod.yml pull
+                        sh """
+                            docker-compose -p stress_test_${params.TARGET_ENV} -f \${CONFIG_FILE} pull
                             echo "Applying rolling update pattern using --wait parameter..."
-                            docker-compose -f docker-compose.prod.yml up -d --wait --remove-orphans
-                        '''
+                            docker-compose -p stress_test_${params.TARGET_ENV} -f \${CONFIG_FILE} up -d --wait --remove-orphans
+                        """
                     }
                 }
             }
