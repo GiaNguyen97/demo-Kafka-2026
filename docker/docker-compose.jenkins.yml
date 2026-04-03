@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build: 
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: jenkins-server
+    privileged: true
+    user: root # Setup root override để tránh phân quyền socket phức tạp ở local Docker Desktop
+    ports:
+      - "8080:8080" # Giao diện Web Jenkins
+      - "50000:50000" # JNLP port cho Agent nội bộ
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Chìa khóa vàng DooD
+      # Tương thích Unix + WSL Windows để Jenkins lấy được executable docker compose host
+      - /usr/bin/docker:/usr/bin/docker
+    restart: on-failure
+
+volumes:
+  jenkins_home:
+    name: jenkins_dood_data

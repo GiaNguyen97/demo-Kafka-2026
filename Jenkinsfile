@@ -31,8 +31,8 @@ pipeline {
             when { expression { params.DEPLOY_VERSION == 'latest' } }
             steps {
                 echo "=== VERIFYING DOCKER DAEMON AVAILABILITY ==="
-                bat 'docker version'
-                bat 'docker info'
+                sh 'docker version'
+                sh 'docker info'
             }
         }
 
@@ -41,15 +41,19 @@ pipeline {
             failFast true
             steps {
                 echo "=== RUNNING UNIT TESTS ==="
+                // Cấp quyền thực thi cho gradlew phòng trường hợp bị mất permission
+                sh 'chmod +x ./backend/async-service/gradlew'
+                sh 'chmod +x ./backend/direct-service/gradlew'
+                sh 'chmod +x ./backend/kafka-service/gradlew'
+
                 dir('backend/async-service') {
-                    // Caching dependencies để giảm thiểu download
-                    bat 'gradlew.bat test --build-cache'
+                    sh './gradlew test --build-cache'
                 }
                 dir('backend/direct-service') {
-                    bat 'gradlew.bat test --build-cache'
+                    sh './gradlew test --build-cache'
                 }
                 dir('backend/kafka-service') {
-                    bat 'gradlew.bat test --build-cache'
+                    sh './gradlew test --build-cache'
                 }
                 echo "=== UNIT TESTS PASSED ==="
             }
@@ -59,7 +63,7 @@ pipeline {
             when { expression { params.TARGET_ENV == 'production' && params.DEPLOY_VERSION == 'latest' } }
             steps {
                 echo "=== RUNNING SONARQUBE ANALYSIS ==="
-                // bat 'gradlew.bat sonar'
+                // sh './gradlew sonar'
                 
                 // MOCK: Chờ kết quả Quality Gate từ SonarQube tránh code bốc mùi lên Prod
                 echo "Waiting for SonarQube Quality Gate result..."
@@ -75,13 +79,13 @@ pipeline {
             steps {
                 echo "=== COMPILING JAR (OPTIMIZED WITH DOCKER COPY) ==="
                 dir('backend/async-service') {
-                    bat 'gradlew.bat assemble -x test --build-cache'
+                    sh './gradlew assemble -x test --build-cache'
                 }
                 dir('backend/direct-service') {
-                    bat 'gradlew.bat assemble -x test --build-cache'
+                    sh './gradlew assemble -x test --build-cache'
                 }
                 dir('backend/kafka-service') {
-                    bat 'gradlew.bat assemble -x test --build-cache'
+                    sh './gradlew assemble -x test --build-cache'
                 }
             }
         }
@@ -120,9 +124,9 @@ pipeline {
                 
                 withEnv(["IMAGE_REGISTRY=${DOCKER_REGISTRY}", "IMAGE_TAG=${PROJECT_VERSION}", "APP_ENV=${params.TARGET_ENV}"]) {
                     dir('docker') {
-                        bat '''
+                        sh '''
                             docker-compose -f docker-compose.prod.yml pull
-                            @echo "Applying rolling update pattern using --wait parameter..."
+                            echo "Applying rolling update pattern using --wait parameter..."
                             docker-compose -f docker-compose.prod.yml up -d --wait --remove-orphans
                         '''
                     }
