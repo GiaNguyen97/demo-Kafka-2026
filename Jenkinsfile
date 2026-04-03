@@ -27,6 +27,15 @@ pipeline {
             }
         }
 
+        stage('Debug Docker Connection') {
+            when { expression { params.DEPLOY_VERSION == 'latest' } }
+            steps {
+                echo "=== VERIFYING DOCKER DAEMON AVAILABILITY ==="
+                bat 'docker version'
+                bat 'docker info'
+            }
+        }
+
         stage('Unit Test') {
             when { expression { params.DEPLOY_VERSION == 'latest' } }
             failFast true
