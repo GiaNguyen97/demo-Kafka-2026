@@ -126,9 +126,13 @@ pipeline {
                     echo "=== PUSHING IMMUTABLE VERSION TO DOCKER REPO ==="
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIAL) {
                         docker.image("${DOCKER_REGISTRY}/async-service:${PROJECT_VERSION}").push()
+                        docker.image("${DOCKER_REGISTRY}/async-service:${PROJECT_VERSION}").push("latest")
                         docker.image("${DOCKER_REGISTRY}/direct-service:${PROJECT_VERSION}").push()
+                        docker.image("${DOCKER_REGISTRY}/direct-service:${PROJECT_VERSION}").push("latest")
                         docker.image("${DOCKER_REGISTRY}/kafka-service:${PROJECT_VERSION}").push()
+                        docker.image("${DOCKER_REGISTRY}/kafka-service:${PROJECT_VERSION}").push("latest")
                         docker.image("${DOCKER_REGISTRY}/stress-frontend:${PROJECT_VERSION}").push()
+                        docker.image("${DOCKER_REGISTRY}/stress-frontend:${PROJECT_VERSION}").push("latest")
                     }
                 }
             }

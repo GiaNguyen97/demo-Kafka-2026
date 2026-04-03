@@ -3,7 +3,6 @@ version: '3.8'
 services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
     ports:
       - "9092:9092"
     environment:
@@ -31,7 +30,6 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
     depends_on:
       kafka:
         condition: service_healthy
@@ -45,7 +43,6 @@ services:
 
   async-service:
     image: ${IMAGE_REGISTRY:-hieupv}/async-service:${IMAGE_TAG:-latest}
-    container_name: async-service
     depends_on:
       kafka:
         condition: service_healthy
@@ -64,7 +61,6 @@ services:
 
   direct-service:
     image: ${IMAGE_REGISTRY:-hieupv}/direct-service:${IMAGE_TAG:-latest}
-    container_name: direct-service
     ports:
       - "8081:8081"
     environment:
@@ -80,7 +76,6 @@ services:
 
   kafka-service:
     image: ${IMAGE_REGISTRY:-hieupv}/kafka-service:${IMAGE_TAG:-latest}
-    container_name: kafka-service
     depends_on:
       kafka:
         condition: service_healthy
@@ -100,7 +95,6 @@ services:
 
   frontend:
     image: ${IMAGE_REGISTRY:-hieupv}/stress-frontend:${IMAGE_TAG:-latest}
-    container_name: stress-frontend
     depends_on:
       kafka-service:
         condition: service_healthy
@@ -121,7 +115,6 @@ services:
   # Centralized Logging Stack (Loki + Promtail + Grafana)
   loki:
     image: grafana/loki:2.9.2
-    container_name: loki
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -130,7 +123,6 @@ services:
 
   promtail:
     image: grafana/promtail:2.9.2
-    container_name: promtail
     volumes:
       - /var/log/docker:/var/log/docker:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -141,7 +133,6 @@ services:
 
   grafana:
     image: grafana/grafana:10.1.5
-    container_name: grafana
     ports:
       - "3000:3000"
     environment:
