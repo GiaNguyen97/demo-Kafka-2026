@@ -259,6 +259,7 @@ function startLagPolling() {
 function startHeartbeat() {
   console.log("💓 [UI Health] Heartbeat Service Started!");
   const fpsEl = $('ui-fps');
+  const hbIcon = document.querySelector('.hb-icon');
   let frameCount = 0;
   let startTime = performance.now();
   
@@ -270,7 +271,16 @@ function startHeartbeat() {
       const fps = Math.round((frameCount * 1000) / (time - startTime));
       if (fpsEl) {
         fpsEl.textContent = `${fps} FPS`;
-        fpsEl.className = 'hb-fps ' + (fps < 20 ? 'frozen' : (fps < 45 ? 'lag' : ''));
+        if (fps < 20) {
+          fpsEl.className = 'hb-fps frozen';
+          if (hbIcon) hbIcon.className = 'hb-icon pulse-frozen';
+        } else if (fps < 45) {
+          fpsEl.className = 'hb-fps lag';
+          if (hbIcon) hbIcon.className = 'hb-icon pulse-lag';
+        } else {
+          fpsEl.className = 'hb-fps';
+          if (hbIcon) hbIcon.className = 'hb-icon pulse-active';
+        }
       }
       frameCount = 0;
       startTime = time;
