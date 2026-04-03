@@ -22,25 +22,23 @@ public class UserController {
         this.logService = logService;
     }
 
-
-
     @PostMapping("/pause")
     public ResponseEntity<String> pause() {
         emailService.setPaused(true);
         logService.setPaused(true);
-        com.example.asyncservice.websocket.WebSocketHandler.sendMessage("🚥 [Hệ thống] Đã TẠM DỪNG xử lý background workers (Email & Logs).");
-        return ResponseEntity.ok("Async Service Paused");
+        com.example.asyncservice.websocket.WebSocketHandler
+                .sendMessage("🚥 [Hệ thống] Đã TẠM DỪNG xử lý background workers (Email & Logs).");
+        return ResponseEntity.ok("Async Service tạm dùng");
     }
-
 
     @PostMapping("/resume")
     public ResponseEntity<String> resume() {
         emailService.setPaused(false);
         logService.setPaused(false);
-        com.example.asyncservice.websocket.WebSocketHandler.sendMessage("🚦 [Hệ thống] Tiếp tục xử lý các background tasks.");
+        com.example.asyncservice.websocket.WebSocketHandler
+                .sendMessage("🚦 [Hệ thống] Tiếp tục xử lý các background tasks.");
         return ResponseEntity.ok("Async Service Resumed");
     }
-
 
     /**
      * POST /users/register?username=abc
