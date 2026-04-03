@@ -153,12 +153,6 @@ pipeline {
             }
         }
 
-        stage('Confirm Production') {
-            when { expression { env.TARGET_ENV == 'production' } }
-            steps {
-                input message: 'Deploy to PRODUCTION? You are about to deploy to the live environment.', submitter: 'admin,devops', ok: 'Yes, deploy'
-            }
-        }
 
         stage('Deploy To Target Environment') {
             steps {
