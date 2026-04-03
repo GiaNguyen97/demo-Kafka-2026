@@ -28,7 +28,7 @@ public class UserController {
         logService.setPaused(true);
         com.example.asyncservice.websocket.WebSocketHandler
                 .sendMessage("🚥 [Hệ thống] Đã TẠM DỪNG xử lý background workers (Email & Logs).");
-        return ResponseEntity.ok("Async Service Paused");
+        return ResponseEntity.ok("Async Service s");
     }
 
     @PostMapping("/resume")
