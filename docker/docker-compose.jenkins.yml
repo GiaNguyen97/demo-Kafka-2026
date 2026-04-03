@@ -9,7 +9,7 @@ services:
     privileged: true
     user: root # Setup root override để tránh phân quyền socket phức tạp ở local Docker Desktop
     ports:
-      - "8080:8080" # Giao diện Web Jenkins
+      - "9090:8080" # Giao diện Web Jenkins
       - "50000:50000" # JNLP port cho Agent nội bộ
     volumes:
       - jenkins_home:/var/jenkins_home
