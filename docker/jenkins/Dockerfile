@@ -19,8 +19,8 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/d
 RUN apt-get update && apt-get install -y \
     docker-ce-cli \
     docker-compose-plugin \
-    docker-compose \
     && rm -rf /var/lib/apt/lists/*
+RUN ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
 
 # Set standard permissions to jenkins user so it can execute pipelines
 RUN usermod -aG root jenkins
